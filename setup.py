@@ -5,7 +5,7 @@ with open('README.md', 'r') as f:
 
 setuptools.setup(
     name='res-birdnet',
-    version='0.0.5',
+    version='0.0.6',
     author='Toby Suwindra',
     author_email='tsuwindra@gmail.com',
     description='This model has been trained on Resnet50 and tested on AUC with 9e% accuracy. The pretrained model can be accessed on res_birdnet.model_uac93',
