@@ -7,8 +7,9 @@ try:
 except ImportError:
     from torch.utils.model_zoo import load_url as load_state_dict_from_url
 
+
 model_urls = dict(
-    acc_93='https://github.com/tobysuwindra/birdsimilarity/releases/download/BirdSimilarityModel/model_auc93.pth',
+    auc93='https://github.com/tobysuwindra/birdsimilarity/releases/download/BirdSimilarityModel/model_auc93.pth'
 )
 
 
@@ -17,12 +18,13 @@ def load_state(arch, progress=True):
     return state
 
 
-def model_93(pretrained=True, progress=True):
-    model = FaceNetModel()
+def model_auc93(pretrained=True, progress=True):
+    model = BirdNetModel()
     if pretrained:
-        state = load_state('acc_93', progress)
+        state = load_state('auc93', progress)
         model.load_state_dict(state['state_dict'])
     return model
+
 
 
 class Flatten(nn.Module):
@@ -31,9 +33,9 @@ class Flatten(nn.Module):
         return x.view(x.size(0), -1)
 
 
-class FaceNetModel(nn.Module):
+class BirdNetModel(nn.Module):
     def __init__(self, pretrained=False):
-        super(FaceNetModel, self).__init__()
+        super(BirdNetModel, self).__init__()
 
         self.model = resnet50(pretrained)
         embedding_size = 128
@@ -48,12 +50,8 @@ class FaceNetModel(nn.Module):
             self.model.layer3,
             self.model.layer4)
 
-        # modify fc layer based on https://arxiv.org/abs/1703.07737
         self.model.fc = nn.Sequential(
             Flatten(),
-            # nn.Linear(100352, 1024),
-            # nn.BatchNorm1d(1024),
-            # nn.ReLU(),
             nn.Linear(100352, embedding_size))
 
         self.model.classifier = nn.Linear(embedding_size, num_classes)
@@ -101,13 +99,11 @@ class FaceNetModel(nn.Module):
                 for param in child.parameters():
                     param.requires_grad = False
 
-    # returns face embedding(embedding_size)
     def forward(self, x):
         x = self.cnn(x)
         x = self.model.fc(x)
 
         features = self.l2_norm(x)
-        # Multiply by alpha = 10 as suggested in https://arxiv.org/pdf/1703.09507.pdf
         alpha = 10
         features = features * alpha
         return features
